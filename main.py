@@ -234,3 +234,25 @@ class MainWindow(QMainWindow):
         self.status_text.setText(text)
         if pct is not None:
             self.prog.setValue(max(0, min(100, pct)))
+
+    def open_file(self):
+        path, _ = QFileDialog.getOpenFileName(
+            self,
+            "Open log file",
+            "",
+            "Log files (*.log)"
+        )
+
+        if not path:
+            return
+
+        if not is_valid_log_file(path):
+            QMessageBox.critical(
+                self,
+                "Invalid file",
+                "Only plain-text .log files are supported.\n\n"
+                "The selected file appears to be binary or unsupported."
+            )
+            return
+
+        self.load_path(path)
