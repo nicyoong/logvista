@@ -569,3 +569,8 @@ class MainWindow(QMainWindow):
     def on_export_finished(self, msg: str):
         self._set_status(msg, 100)
         QMessageBox.information(self, "Export", msg)
+
+    @Slot(str)
+    def on_worker_failed(self, err: str):
+        self._set_status("Error occurred.", 0)
+        QMessageBox.critical(self, "Error", err)
