@@ -456,3 +456,16 @@ class MainWindow(QMainWindow):
 
         self.cluster_thread = (t, w)
         t.start()
+
+    @Slot(object)
+    def on_cluster_finished(self, clusters):
+        # clusters: list[(count, key, sample)]
+        self.cluster_table.setRowCount(0)
+        for count, key, sample in clusters:
+            row = self.cluster_table.rowCount()
+            self.cluster_table.insertRow(row)
+            it0 = QTableWidgetItem(str(count))
+            it0.setData(Qt.UserRole, (key, sample))
+            it1 = QTableWidgetItem(key)
+            self.cluster_table.setItem(row, 0, it0)
+            self.cluster_table.setItem(row, 1, it1)
