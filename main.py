@@ -574,3 +574,17 @@ class MainWindow(QMainWindow):
     def on_worker_failed(self, err: str):
         self._set_status("Error occurred.", 0)
         QMessageBox.critical(self, "Error", err)
+
+    def show_about(self):
+        QMessageBox.information(
+            self,
+            "About",
+            f"<b>{APP_NAME}</b><br><br>"
+            "A high-performance GUI tool for analyzing large logs using PySide6.<br>"
+            "<ul>"
+            "<li>Memory-mapped file access + offset indexing</li>"
+            "<li>Threaded indexing/filtering/clustering</li>"
+            "<li>Custom table model + timeline visualization</li>"
+            "<li>Streaming exports</li>"
+            "</ul>"
+        )
