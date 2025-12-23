@@ -368,3 +368,12 @@ class MainWindow(QMainWindow):
         self._set_status("Filtering…", 0)
         t.start()
     
+    def cancel_filter_cluster_export(self):
+        for obj_name in ("filter_thread", "cluster_thread", "export_thread"):
+            obj = getattr(self, obj_name)
+            if obj:
+                t, w = obj
+                try:
+                    w.cancel()
+                except Exception:
+                    pass
