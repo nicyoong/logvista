@@ -1,8 +1,8 @@
 import random
 from datetime import datetime, timedelta
 
-OUTPUT_FILE = "mock200mb.log"
-TARGET_SIZE_MB = 200
+OUTPUT_FILE = "mock10mb.log"
+TARGET_SIZE_MB = 10
 TARGET_BYTES = TARGET_SIZE_MB * 1024 * 1024
 
 LEVELS = ["DEBUG", "INFO", "WARN", "ERROR", "CRITICAL"]
