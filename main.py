@@ -431,3 +431,28 @@ class MainWindow(QMainWindow):
             minutes_sorted = compressed
 
         self.timeline.set_bins(minutes_sorted)
+
+    def start_clustering(self):
+        self.cancel_filter_cluster_export()
+        rows = self.model.view_rows
+        if not rows:
+            self.cluster_table.setRowCount(0)
+            return
+
+        w = ClusterWorker(self.mf, self.idx, rows, only_errors=True, max_clusters=60)
+        t = QThread(self)
+        w.moveToThread(t)
+        w.progress.connect(self.on_progress)
+        w.status.connect(self.on_status)
+        w.finished.connect(self.on_cluster_finished)
+        w.failed.connect(self.on_worker_failed)
+
+        t.started.connect(w.run)
+        w.finished.connect(t.quit)
+        w.finished.connect(w.deleteLater)
+        t.finished.connect(t.deleteLater)
+        w.failed.connect(t.quit)
+        w.failed.connect(w.deleteLater)
+
+        self.cluster_thread = (t, w)
+        t.start()
