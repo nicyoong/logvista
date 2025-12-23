@@ -229,3 +229,8 @@ class MainWindow(QMainWindow):
         self.act_export_csv.setEnabled(enabled)
         self.act_export_jsonl.setEnabled(enabled)
         self.act_export_html.setEnabled(enabled)
+
+    def _set_status(self, text: str, pct: int | None = None):
+        self.status_text.setText(text)
+        if pct is not None:
+            self.prog.setValue(max(0, min(100, pct)))
