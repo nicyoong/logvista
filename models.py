@@ -4,8 +4,9 @@ from PySide6.QtCore import (
     Qt, QAbstractTableModel, QModelIndex, QObject, QThread, Signal, Slot, QSize,
     QTimer
 )
+from PySide6.QtGui import QAction, QFont, QPainter, QColor, QPen
 
-from indexing import detect_level, IndexWorker, LogIndex, parse_ts_compact
+from indexing import detect_level, IndexWorker, LogIndex, parse_ts_compact, INT_TO_LEVEL
 from filelog import MappedLogFile, is_valid_log_file
 
 class LogTableModel(QAbstractTableModel):
