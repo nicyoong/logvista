@@ -57,3 +57,13 @@ class MainWindow(QMainWindow):
 
         splitter = QSplitter(Qt.Horizontal)
         root.addWidget(splitter)
+
+        # left panel
+        left = QWidget()
+        left_layout = QVBoxLayout(left)
+        left_layout.setContentsMargins(8, 8, 8, 8)
+        left_layout.setSpacing(8)
+
+        self.path_label = QLabel("No file loaded")
+        self.path_label.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        left_layout.addWidget(self.path_label)
