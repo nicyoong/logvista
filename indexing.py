@@ -1,5 +1,29 @@
 from array import array
 from dataclasses import dataclass
+import os
+import time
+import traceback
+
+from PySide6.QtCore import (
+    Qt, QAbstractTableModel, QModelIndex, QObject, QThread, Signal, Slot, QSize,
+    QTimer
+)
+
+LEVEL_WORDS = ("TRACE", "DEBUG", "INFO", "WARN", "WARNING", "ERROR", "FATAL", "CRITICAL")
+LEVEL_CANON = {
+    "TRACE": "TRACE",
+    "DEBUG": "DEBUG",
+    "INFO": "INFO",
+    "WARN": "WARN",
+    "WARNING": "WARN",
+    "ERROR": "ERROR",
+    "FATAL": "FATAL",
+    "CRITICAL": "CRITICAL",
+}
+
+LEVEL_ORDER = ["TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL", "CRITICAL"]
+LEVEL_TO_INT = {lvl: i for i, lvl in enumerate(LEVEL_ORDER)}
+INT_TO_LEVEL = {v: k for k, v in LEVEL_TO_INT.items()}
 
 # Detect a timestamp early in the line (common formats)
 # We'll parse a compact numeric key: YYYYMMDDHHMMSS (int) and a minute bucket: YYYYMMDDHHMM (int)
