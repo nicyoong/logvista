@@ -84,4 +84,16 @@ class MainWindow(QMainWindow):
         self.use_regex_cb.setChecked(True)
         row1.addWidget(self.use_regex_cb)
         fb.addLayout(row1)
+
+        # level checkboxes
+        lv_row = QHBoxLayout()
+        lv_row.addWidget(QLabel("Levels:"))
+        self.level_cbs = {}
+        for lvl in LEVEL_ORDER:
+            cb = QCheckBox(lvl)
+            cb.setChecked(lvl in ("INFO", "WARN", "ERROR", "FATAL", "CRITICAL"))
+            self.level_cbs[lvl] = cb
+            lv_row.addWidget(cb)
+        lv_row.addStretch(1)
+        fb.addLayout(lv_row)
         
