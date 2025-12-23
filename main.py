@@ -179,3 +179,32 @@ class MainWindow(QMainWindow):
         self._build_toolbar()
 
         self._set_ui_enabled(False)
+
+    def _build_actions(self):
+        mfile = self.menuBar().addMenu("&File")
+
+        self.act_open = QAction("&Open…", self)
+        self.act_open.triggered.connect(self.open_file)
+        mfile.addAction(self.act_open)
+
+        self.act_export_csv = QAction("Export &CSV…", self)
+        self.act_export_csv.triggered.connect(lambda: self.export_report("csv"))
+        mfile.addAction(self.act_export_csv)
+
+        self.act_export_jsonl = QAction("Export &JSONL…", self)
+        self.act_export_jsonl.triggered.connect(lambda: self.export_report("jsonl"))
+        mfile.addAction(self.act_export_jsonl)
+
+        self.act_export_html = QAction("Export &HTML Report…", self)
+        self.act_export_html.triggered.connect(lambda: self.export_report("html"))
+        mfile.addAction(self.act_export_html)
+
+        mfile.addSeparator()
+        self.act_quit = QAction("&Quit", self)
+        self.act_quit.triggered.connect(self.close)
+        mfile.addAction(self.act_quit)
+
+        mhelp = self.menuBar().addMenu("&Help")
+        self.act_about = QAction("&About", self)
+        self.act_about.triggered.connect(self.show_about)
+        mhelp.addAction(self.act_about)
