@@ -494,3 +494,45 @@ class MainWindow(QMainWindow):
         row = idx.row()
         txt = self.model.get_row_text(row)
         self.details.setPlainText(txt)
+
+    def export_report(self, fmt: str):
+        if not self.model.view_rows:
+            QMessageBox.information(self, "Export", "No rows to export (current view is empty).")
+            return
+
+        if fmt == "csv":
+            path, _ = QFileDialog.getSaveFileName(self, "Export CSV", "report.csv", "CSV (*.csv)")
+        elif fmt == "jsonl":
+            path, _ = QFileDialog.getSaveFileName(self, "Export JSONL", "report.jsonl", "JSONL (*.jsonl)")
+        else:
+            path, _ = QFileDialog.getSaveFileName(self, "Export HTML Report", "report.html", "HTML (*.html)")
+
+        if not path:
+            return
+
+        self.cancel_filter_cluster_export()
+
+        # Export potentially huge view: let user cap rows
+        cap = self._ask_export_cap()
+        if cap == 0:
+            return
+        max_rows = None if cap < 0 else cap
+
+        w = ExportWorker(fmt, path, self.mf, self.idx, self.model.view_rows, max_rows=max_rows)
+        t = QThread(self)
+        w.moveToThread(t)
+        w.progress.connect(self.on_progress)
+        w.status.connect(self.on_status)
+        w.finished.connect(self.on_export_finished)
+        w.failed.connect(self.on_worker_failed)
+
+        t.started.connect(w.run)
+        w.finished.connect(t.quit)
+        w.finished.connect(w.deleteLater)
+        t.finished.connect(t.deleteLater)
+        w.failed.connect(t.quit)
+        w.failed.connect(w.deleteLater)
+
+        self.export_thread = (t, w)
+        self._set_status("Exporting…", 0)
+        t.start()
