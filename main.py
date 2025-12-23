@@ -173,3 +173,9 @@ class MainWindow(QMainWindow):
         sb.addPermanentWidget(self.prog)
         self.status_text = QLabel("")
         sb.addWidget(self.status_text, 1)
+
+        # actions / menu
+        self._build_actions()
+        self._build_toolbar()
+
+        self._set_ui_enabled(False)
