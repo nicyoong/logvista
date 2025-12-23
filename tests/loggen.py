@@ -1,8 +1,7 @@
 import random
-import time
 from datetime import datetime, timedelta
 
-OUTPUT_FILE = "fake_500mb.log"
+OUTPUT_FILE = "mock500mb.log"
 TARGET_SIZE_MB = 500
 TARGET_BYTES = TARGET_SIZE_MB * 1024 * 1024
 
@@ -28,6 +27,8 @@ STACK_TRACE = """Traceback (most recent call last):
     raise ValueError("Invalid payload")
 ValueError: Invalid payload
 """
+
+REPORT_EVERY_LINES = 10_000_000
 
 def random_message():
     msg = random.choice(MESSAGES)
@@ -55,14 +56,20 @@ def main():
             msg = random_message()
 
             line = f"{timestamp} [{level}] {msg}\n"
+            line_count += 1
 
             # Occasionally add stack traces for realism
             if level in ("ERROR", "CRITICAL") and random.random() < 0.2:
                 line += STACK_TRACE + "\n"
+                line_count += STACK_TRACE.count("\n") + 1
 
             f.write(line)
             written += len(line.encode("utf-8"))
             now += timedelta(seconds=random.randint(0, 3))
+
+            if line_count % REPORT_EVERY_LINES == 0:
+                mb = written / (1024 * 1024)
+                print(f"[progress] {line_count:,} lines written (~{mb:.1f} MB)")
 
     print(f"Generated {OUTPUT_FILE} (~{written / 1024 / 1024:.1f} MB)")
 
