@@ -208,3 +208,13 @@ class MainWindow(QMainWindow):
         self.act_about = QAction("&About", self)
         self.act_about.triggered.connect(self.show_about)
         mhelp.addAction(self.act_about)
+
+    def _build_toolbar(self):
+        tb = QToolBar("Main")
+        tb.setMovable(False)
+        self.addToolBar(tb)
+        tb.addAction(self.act_open)
+        tb.addSeparator()
+        tb.addAction(self.act_export_csv)
+        tb.addAction(self.act_export_jsonl)
+        tb.addAction(self.act_export_html)
