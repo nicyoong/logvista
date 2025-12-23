@@ -4,14 +4,17 @@ import traceback
 from collections import Counter
 
 from PySide6.QtCore import (
-    Qt, QAbstractTableModel, QModelIndex, QObject, QThread, Signal, Slot, QSize,
-    QTimer
+    QObject,
+    Signal,
+    Slot,
 )
 
-from indexing import detect_level, IndexWorker, LogIndex, parse_ts_compact, INT_TO_LEVEL
-from filelog import MappedLogFile, is_valid_log_file
+from indexing import LogIndex, parse_ts_compact, INT_TO_LEVEL
+from filelog import MappedLogFile
 
-RE_GUID = re.compile(r"\b[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\b")
+RE_GUID = re.compile(
+    r"\b[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\b"
+)
 RE_HEX = re.compile(r"\b0x[0-9a-fA-F]+\b")
 RE_NUM = re.compile(r"\b\d+\b")
 RE_QUOTED = re.compile(r"(['\"]).*?\1")
@@ -20,6 +23,7 @@ RE_MULTI_WS = re.compile(r"\s+")
 RE_IP = re.compile(r"\b\d{1,3}(?:\.\d{1,3}){3}\b")
 RE_EMAIL = re.compile(r"\b[\w\.-]+@[\w\.-]+\.\w+\b")
 RE_BRACKETS = re.compile(r"\[[^\]]*\]|\([^\)]*\)|\{[^\}]*\}")
+
 
 def normalize_message_for_cluster(msg: str) -> str:
     """
@@ -40,16 +44,22 @@ def normalize_message_for_cluster(msg: str) -> str:
         s = s[:180] + "…"
     return s
 
+
 class FilterWorker(QObject):
     progress = Signal(int)
     status = Signal(str)
-    finished = Signal(object)     # list[int] row_ids
+    finished = Signal(object)  # list[int] row_ids
     failed = Signal(str)
 
-    def __init__(self, mapped_file: MappedLogFile, index: LogIndex,
-                 regex_text: str, use_regex: bool,
-                 level_mask: set,
-                 time_bucket_minute: int | None):
+    def __init__(
+        self,
+        mapped_file: MappedLogFile,
+        index: LogIndex,
+        regex_text: str,
+        use_regex: bool,
+        level_mask: set,
+        time_bucket_minute: int | None,
+    ):
         super().__init__()
         self.mf = mapped_file
         self.idx = index
@@ -83,8 +93,14 @@ class FilterWorker(QObject):
                     return
 
                 # Level filter from precomputed metadata
-                lvl_int = int(self.idx.level_ints[i]) if i < len(self.idx.level_ints) else 255
-                if self.level_mask and lvl_int != 255 and INT_TO_LEVEL.get(lvl_int) not in self.level_mask:
+                lvl_int = (
+                    int(self.idx.level_ints[i]) if i < len(self.idx.level_ints) else 255
+                )
+                if (
+                    self.level_mask
+                    and lvl_int != 255
+                    and INT_TO_LEVEL.get(lvl_int) not in self.level_mask
+                ):
                     continue
                 if self.level_mask and lvl_int == 255:
                     # Unknown level: keep it (common in raw logs); comment out to drop unknown:
@@ -92,7 +108,11 @@ class FilterWorker(QObject):
 
                 # Time bucket filter (minute key)
                 if self.time_bucket_minute is not None:
-                    mk = int(self.idx.minute_keys[i]) if i < len(self.idx.minute_keys) else 0
+                    mk = (
+                        int(self.idx.minute_keys[i])
+                        if i < len(self.idx.minute_keys)
+                        else 0
+                    )
                     if mk != self.time_bucket_minute:
                         continue
 
@@ -121,14 +141,21 @@ class FilterWorker(QObject):
     def cancel(self):
         self._cancel = True
 
+
 class ClusterWorker(QObject):
     progress = Signal(int)
     status = Signal(str)
-    finished = Signal(object)     # list[tuple[count, cluster_key, sample_line]]
+    finished = Signal(object)  # list[tuple[count, cluster_key, sample_line]]
     failed = Signal(str)
 
-    def __init__(self, mapped_file: MappedLogFile, index: LogIndex, view_rows: list[int],
-                 only_errors: bool = True, max_clusters: int = 50):
+    def __init__(
+        self,
+        mapped_file: MappedLogFile,
+        index: LogIndex,
+        view_rows: list[int],
+        only_errors: bool = True,
+        max_clusters: int = 50,
+    ):
         super().__init__()
         self.mf = mapped_file
         self.idx = index
@@ -152,7 +179,11 @@ class ClusterWorker(QObject):
                     self.finished.emit([])
                     return
 
-                lvl_int = int(self.idx.level_ints[row]) if row < len(self.idx.level_ints) else 255
+                lvl_int = (
+                    int(self.idx.level_ints[row])
+                    if row < len(self.idx.level_ints)
+                    else 255
+                )
                 lvl = INT_TO_LEVEL.get(lvl_int, "")
                 line = None
 
@@ -163,7 +194,12 @@ class ClusterWorker(QObject):
                         offset = int(self.idx.offsets[row])
                         prefix = self.mf.readline_at(offset, max_bytes=4096)
                         up = prefix.upper()
-                        if "EXCEPTION" not in up and "TRACEBACK" not in up and "FAILED" not in up and "ERROR" not in up:
+                        if (
+                            "EXCEPTION" not in up
+                            and "TRACEBACK" not in up
+                            and "FAILED" not in up
+                            and "ERROR" not in up
+                        ):
                             continue
                         line = prefix
 

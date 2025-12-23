@@ -1,38 +1,52 @@
-import os
 import re
 import sys
-import json
-import time
-import mmap
 import math
-import html
-import traceback
-from array import array
-from dataclasses import dataclass
-from datetime import datetime
-from collections import OrderedDict, Counter, defaultdict
+from collections import Counter
 
 from PySide6.QtCore import (
-    Qt, QAbstractTableModel, QModelIndex, QObject, QThread, Signal, Slot, QSize,
-    QTimer
+    Qt,
+    QModelIndex,
+    QThread,
+    Slot,
 )
-from PySide6.QtGui import QAction, QFont, QPainter, QColor, QPen
+from PySide6.QtGui import QAction, QFont
 from PySide6.QtWidgets import (
-    QApplication, QMainWindow, QWidget, QFileDialog, QHBoxLayout, QVBoxLayout,
-    QLineEdit, QPushButton, QLabel, QCheckBox, QSplitter, QTableView,
-    QProgressBar, QMessageBox, QStatusBar, QComboBox, QDockWidget, QTableWidget,
-    QTableWidgetItem, QHeaderView, QTextEdit, QDialog, QDialogButtonBox, QFormLayout,
-    QSpinBox, QToolBar
+    QApplication,
+    QMainWindow,
+    QWidget,
+    QFileDialog,
+    QHBoxLayout,
+    QVBoxLayout,
+    QLineEdit,
+    QPushButton,
+    QLabel,
+    QCheckBox,
+    QSplitter,
+    QTableView,
+    QProgressBar,
+    QMessageBox,
+    QStatusBar,
+    QDockWidget,
+    QTableWidget,
+    QTableWidgetItem,
+    QHeaderView,
+    QTextEdit,
+    QDialog,
+    QDialogButtonBox,
+    QFormLayout,
+    QSpinBox,
+    QToolBar,
 )
 
 from export import ExportWorker
 from filtering import FilterWorker, ClusterWorker
-from indexing import detect_level, IndexWorker, LogIndex, parse_ts_compact, LEVEL_ORDER
+from indexing import IndexWorker, LogIndex, LEVEL_ORDER
 from filelog import MappedLogFile, is_valid_log_file
 from models import LogTableModel
 from previewdialog import TextPreviewDialog
 from settings import APP_NAME
 from timelinewidget import TimelineWidget
+
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -76,7 +90,9 @@ class MainWindow(QMainWindow):
 
         row1 = QHBoxLayout()
         self.regex_input = QLineEdit()
-        self.regex_input.setPlaceholderText("Regex filter (Python re). Example: ERROR|Exception|timeout")
+        self.regex_input.setPlaceholderText(
+            "Regex filter (Python re). Example: ERROR|Exception|timeout"
+        )
         row1.addWidget(QLabel("Filter:"))
         row1.addWidget(self.regex_input, 1)
 
@@ -110,7 +126,9 @@ class MainWindow(QMainWindow):
         left_layout.addWidget(filter_box)
 
         # timeline
-        left_layout.addWidget(QLabel("Timeline (click a bar to filter to that minute):"))
+        left_layout.addWidget(
+            QLabel("Timeline (click a bar to filter to that minute):")
+        )
         self.timeline = TimelineWidget()
         self.timeline.bucketClicked.connect(self.on_timeline_bucket_clicked)
         left_layout.addWidget(self.timeline)
@@ -119,7 +137,9 @@ class MainWindow(QMainWindow):
         left_layout.addWidget(QLabel("Selected line:"))
         self.details = QTextEdit()
         self.details.setReadOnly(True)
-        self.details.setFont(QFont("Consolas" if sys.platform.startswith("win") else "Monospace", 10))
+        self.details.setFont(
+            QFont("Consolas" if sys.platform.startswith("win") else "Monospace", 10)
+        )
         left_layout.addWidget(self.details, 1)
 
         splitter.addWidget(left)
@@ -136,8 +156,12 @@ class MainWindow(QMainWindow):
         self.table.setSelectionMode(QTableView.SingleSelection)
         self.table.verticalHeader().setVisible(False)
         self.table.horizontalHeader().setStretchLastSection(True)
-        self.table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeToContents)
-        self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeToContents)
+        self.table.horizontalHeader().setSectionResizeMode(
+            0, QHeaderView.ResizeToContents
+        )
+        self.table.horizontalHeader().setSectionResizeMode(
+            1, QHeaderView.ResizeToContents
+        )
         self.table.horizontalHeader().setSectionResizeMode(2, QHeaderView.Stretch)
         self.table.clicked.connect(self.on_table_clicked)
 
@@ -151,11 +175,19 @@ class MainWindow(QMainWindow):
 
         # cluster dock
         self.cluster_dock = QDockWidget("Error Clusters", self)
-        self.cluster_dock.setAllowedAreas(Qt.BottomDockWidgetArea | Qt.RightDockWidgetArea)
+        self.cluster_dock.setAllowedAreas(
+            Qt.BottomDockWidgetArea | Qt.RightDockWidgetArea
+        )
         self.cluster_table = QTableWidget(0, 2)
-        self.cluster_table.setHorizontalHeaderLabels(["Count", "Cluster Key (normalized)"])
-        self.cluster_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeToContents)
-        self.cluster_table.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch)
+        self.cluster_table.setHorizontalHeaderLabels(
+            ["Count", "Cluster Key (normalized)"]
+        )
+        self.cluster_table.horizontalHeader().setSectionResizeMode(
+            0, QHeaderView.ResizeToContents
+        )
+        self.cluster_table.horizontalHeader().setSectionResizeMode(
+            1, QHeaderView.Stretch
+        )
         self.cluster_table.verticalHeader().setVisible(False)
         self.cluster_table.setSelectionBehavior(QTableWidget.SelectRows)
         self.cluster_table.setSelectionMode(QTableWidget.SingleSelection)
@@ -237,10 +269,7 @@ class MainWindow(QMainWindow):
 
     def open_file(self):
         path, _ = QFileDialog.getOpenFileName(
-            self,
-            "Open log file",
-            "",
-            "Log files (*.log)"
+            self, "Open log file", "", "Log files (*.log)"
         )
 
         if not path:
@@ -251,7 +280,7 @@ class MainWindow(QMainWindow):
                 self,
                 "Invalid file",
                 "Only plain-text .log files are supported.\n\n"
-                "The selected file appears to be binary or unsupported."
+                "The selected file appears to be binary or unsupported.",
             )
             return
 
@@ -259,11 +288,7 @@ class MainWindow(QMainWindow):
 
     def load_path(self, path: str):
         if not is_valid_log_file(path):
-            QMessageBox.critical(
-                self,
-                "Invalid file",
-                "Refusing to load non-log file."
-            )
+            QMessageBox.critical(self, "Invalid file", "Refusing to load non-log file.")
             return
         # cancel running jobs
         self.cancel_all_workers()
@@ -328,7 +353,12 @@ class MainWindow(QMainWindow):
         self._set_status(f"Ready. Lines: {idx.total_lines:,}", 100)
 
     def cancel_all_workers(self):
-        for obj in (self.index_thread, self.filter_thread, self.cluster_thread, self.export_thread):
+        for obj in (
+            self.index_thread,
+            self.filter_thread,
+            self.cluster_thread,
+            self.export_thread,
+        ):
             if obj:
                 t, w = obj
                 try:
@@ -367,7 +397,7 @@ class MainWindow(QMainWindow):
         self.filter_thread = (t, w)
         self._set_status("Filtering…", 0)
         t.start()
-    
+
     def cancel_filter_cluster_export(self):
         for obj_name in ("filter_thread", "cluster_thread", "export_thread"):
             obj = getattr(self, obj_name)
@@ -377,7 +407,7 @@ class MainWindow(QMainWindow):
                     w.cancel()
                 except Exception:
                     pass
-    
+
     @Slot(object)
     def on_filter_finished(self, rows: list[int]):
         self.model.set_view_rows(rows)
@@ -398,7 +428,7 @@ class MainWindow(QMainWindow):
         # Click-to-filter to that minute
         self.active_time_bucket = minute_key
         self.apply_filter()
-    
+
     def update_timeline_bins(self, view_rows: list[int], max_bins: int = 240):
         """
         Uses minute_keys. If there are too many distinct minutes, it compresses into larger bins.
@@ -424,7 +454,7 @@ class MainWindow(QMainWindow):
             block = math.ceil(len(minutes_sorted) / max_bins)
             compressed = []
             for i in range(0, len(minutes_sorted), block):
-                chunk = minutes_sorted[i:i+block]
+                chunk = minutes_sorted[i : i + block]
                 mk0 = chunk[0][0]
                 csum = sum(c for _, c in chunk)
                 compressed.append((mk0, csum))
@@ -482,7 +512,13 @@ class MainWindow(QMainWindow):
 
         # Apply token filter: build a fuzzy contains regex from cluster key
         # This makes drill-down feel “magical” but still explainable.
-        tokens = [t for t in re.split(r"\W+", key) if t and t not in ("<num>", "<guid>", "<hex>", "<path>", "<str>", "<ip>", "<email>")]
+        tokens = [
+            t
+            for t in re.split(r"\W+", key)
+            if t
+            and t
+            not in ("<num>", "<guid>", "<hex>", "<path>", "<str>", "<ip>", "<email>")
+        ]
         if not tokens:
             return
         pattern = ".*".join(map(re.escape, tokens[:8]))
@@ -497,15 +533,23 @@ class MainWindow(QMainWindow):
 
     def export_report(self, fmt: str):
         if not self.model.view_rows:
-            QMessageBox.information(self, "Export", "No rows to export (current view is empty).")
+            QMessageBox.information(
+                self, "Export", "No rows to export (current view is empty)."
+            )
             return
 
         if fmt == "csv":
-            path, _ = QFileDialog.getSaveFileName(self, "Export CSV", "report.csv", "CSV (*.csv)")
+            path, _ = QFileDialog.getSaveFileName(
+                self, "Export CSV", "report.csv", "CSV (*.csv)"
+            )
         elif fmt == "jsonl":
-            path, _ = QFileDialog.getSaveFileName(self, "Export JSONL", "report.jsonl", "JSONL (*.jsonl)")
+            path, _ = QFileDialog.getSaveFileName(
+                self, "Export JSONL", "report.jsonl", "JSONL (*.jsonl)"
+            )
         else:
-            path, _ = QFileDialog.getSaveFileName(self, "Export HTML Report", "report.html", "HTML (*.html)")
+            path, _ = QFileDialog.getSaveFileName(
+                self, "Export HTML Report", "report.html", "HTML (*.html)"
+            )
 
         if not path:
             return
@@ -518,7 +562,9 @@ class MainWindow(QMainWindow):
             return
         max_rows = None if cap < 0 else cap
 
-        w = ExportWorker(fmt, path, self.mf, self.idx, self.model.view_rows, max_rows=max_rows)
+        w = ExportWorker(
+            fmt, path, self.mf, self.idx, self.model.view_rows, max_rows=max_rows
+        )
         t = QThread(self)
         w.moveToThread(t)
         w.progress.connect(self.on_progress)
@@ -546,7 +592,9 @@ class MainWindow(QMainWindow):
         spin = QSpinBox()
         spin.setRange(1, 10_000_000)
         spin.setValue(200_000)
-        form.addRow("Max rows (streamed). Use a big number or choose 'All'.", QLabel(""))
+        form.addRow(
+            "Max rows (streamed). Use a big number or choose 'All'.", QLabel("")
+        )
         form.addRow("Max rows:", spin)
         layout.addLayout(form)
 
@@ -564,7 +612,7 @@ class MainWindow(QMainWindow):
         if all_cb.isChecked():
             return -1
         return int(spin.value())
-    
+
     @Slot(str)
     def on_export_finished(self, msg: str):
         self._set_status(msg, 100)
@@ -586,7 +634,7 @@ class MainWindow(QMainWindow):
             "<li>Threaded indexing/filtering/clustering</li>"
             "<li>Custom table model + timeline visualization</li>"
             "<li>Streaming exports</li>"
-            "</ul>"
+            "</ul>",
         )
 
     def closeEvent(self, ev):
@@ -596,6 +644,7 @@ class MainWindow(QMainWindow):
         except Exception:
             pass
         super().closeEvent(ev)
+
 
 def main():
     app = QApplication(sys.argv)

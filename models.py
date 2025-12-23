@@ -1,16 +1,19 @@
-from collections import OrderedDict, Counter, defaultdict
+from collections import OrderedDict
 
 from PySide6.QtCore import (
-    Qt, QAbstractTableModel, QModelIndex, QObject, QThread, Signal, Slot, QSize,
-    QTimer
+    Qt,
+    QAbstractTableModel,
+    QModelIndex,
 )
-from PySide6.QtGui import QAction, QFont, QPainter, QColor, QPen
+from PySide6.QtGui import QColor
 
-from indexing import detect_level, IndexWorker, LogIndex, parse_ts_compact, INT_TO_LEVEL
-from filelog import MappedLogFile, is_valid_log_file
+from indexing import LogIndex, parse_ts_compact, INT_TO_LEVEL
+from filelog import MappedLogFile
+
 
 class LogTableModel(QAbstractTableModel):
     COLS = ["Timestamp", "Level", "Message"]
+
     def __init__(self, mf: MappedLogFile, index: LogIndex):
         super().__init__()
         self.mf = mf
@@ -49,7 +52,11 @@ class LogTableModel(QAbstractTableModel):
         sec_key, _ = parse_ts_compact(line)
         ts = line[:19] if sec_key is not None else ""
 
-        lvl_int = int(self.log_index.level_ints[row_id]) if row_id < len(self.log_index.level_ints) else 255
+        lvl_int = (
+            int(self.log_index.level_ints[row_id])
+            if row_id < len(self.log_index.level_ints)
+            else 255
+        )
         lvl = INT_TO_LEVEL.get(lvl_int, "")
 
         msg = line

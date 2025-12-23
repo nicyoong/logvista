@@ -1,15 +1,11 @@
 from PySide6.QtCore import (
-    Qt, QAbstractTableModel, QModelIndex, QObject, QThread, Signal, Slot, QSize,
-    QTimer
+    Qt,
+    Signal,
+    QSize
 )
-from PySide6.QtGui import QAction, QFont, QPainter, QColor, QPen
-from PySide6.QtWidgets import (
-    QApplication, QMainWindow, QWidget, QFileDialog, QHBoxLayout, QVBoxLayout,
-    QLineEdit, QPushButton, QLabel, QCheckBox, QSplitter, QTableView,
-    QProgressBar, QMessageBox, QStatusBar, QComboBox, QDockWidget, QTableWidget,
-    QTableWidgetItem, QHeaderView, QTextEdit, QDialog, QDialogButtonBox, QFormLayout,
-    QSpinBox, QToolBar
-)
+from PySide6.QtGui import QPainter, QColor, QPen
+from PySide6.QtWidgets import QWidget
+
 
 class TimelineWidget(QWidget):
     bucketClicked = Signal(int)  # minute_key
@@ -17,7 +13,7 @@ class TimelineWidget(QWidget):
     def __init__(self):
         super().__init__()
         self.setMinimumHeight(90)
-        self._bins = []      # list[(minute_key, count)]
+        self._bins = []  # list[(minute_key, count)]
         self._max = 1
         self._hover = -1
 
@@ -63,7 +59,11 @@ class TimelineWidget(QWidget):
         last = self._bins[-1][0]
         p.drawText(10, self.height() - 8, self._format_minute(first))
         txt = self._format_minute(last)
-        p.drawText(self.width() - 10 - p.fontMetrics().horizontalAdvance(txt), self.height() - 8, txt)
+        p.drawText(
+            self.width() - 10 - p.fontMetrics().horizontalAdvance(txt),
+            self.height() - 8,
+            txt,
+        )
         p.end()
 
     def _format_minute(self, mk: int) -> str:

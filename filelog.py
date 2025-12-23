@@ -1,6 +1,7 @@
 import mmap
 import os
 
+
 class MappedLogFile:
     def __init__(self):
         self.path = None

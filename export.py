@@ -1,17 +1,19 @@
 import html
 import json
 import traceback
-from collections import OrderedDict, Counter, defaultdict
+from collections import Counter
 from datetime import datetime
 
 from PySide6.QtCore import (
-    Qt, QAbstractTableModel, QModelIndex, QObject, QThread, Signal, Slot, QSize,
-    QTimer
+    QObject,
+    Signal,
+    Slot,
 )
 
-from indexing import detect_level, IndexWorker, LogIndex, parse_ts_compact, INT_TO_LEVEL
+from indexing import LogIndex, parse_ts_compact, INT_TO_LEVEL
 from filelog import MappedLogFile, is_valid_log_file
 from settings import APP_NAME
+
 
 class ExportWorker(QObject):
     progress = Signal(int)
@@ -19,9 +21,15 @@ class ExportWorker(QObject):
     finished = Signal(str)
     failed = Signal(str)
 
-    def __init__(self, fmt: str, out_path: str,
-                 mapped_file: MappedLogFile, index: LogIndex, view_rows: list[int],
-                 max_rows: int | None = None):
+    def __init__(
+        self,
+        fmt: str,
+        out_path: str,
+        mapped_file: MappedLogFile,
+        index: LogIndex,
+        view_rows: list[int],
+        max_rows: int | None = None,
+    ):
         super().__init__()
         self.fmt = fmt  # 'csv', 'jsonl', 'html'
         self.out_path = out_path
@@ -41,7 +49,9 @@ class ExportWorker(QObject):
         sec_key, _ = parse_ts_compact(line)
         ts = line[:19] if sec_key is not None else ""
 
-        lvl_int = int(self.idx.level_ints[row]) if row < len(self.idx.level_ints) else 255
+        lvl_int = (
+            int(self.idx.level_ints[row]) if row < len(self.idx.level_ints) else 255
+        )
         lvl = INT_TO_LEVEL.get(lvl_int, "")
 
         # Message (trim potential timestamp)
@@ -62,6 +72,7 @@ class ExportWorker(QObject):
 
             if self.fmt == "csv":
                 import csv
+
                 with open(self.out_path, "w", newline="", encoding="utf-8") as f:
                     w = csv.writer(f)
                     w.writerow(["timestamp", "level", "message"])
@@ -96,16 +107,22 @@ class ExportWorker(QObject):
                 max_preview = min(n, 5000)
                 counts_by_level = Counter()
                 for row in rows:
-                    lvl_int = int(self.idx.level_ints[row]) if row < len(self.idx.level_ints) else 255
+                    lvl_int = (
+                        int(self.idx.level_ints[row])
+                        if row < len(self.idx.level_ints)
+                        else 255
+                    )
                     lvl = INT_TO_LEVEL.get(lvl_int, "UNKNOWN" if lvl_int == 255 else "")
                     counts_by_level[lvl] += 1
 
-                def esc(x): return html.escape(x or "")
+                def esc(x):
+                    return html.escape(x or "")
 
                 with open(self.out_path, "w", encoding="utf-8") as f:
                     f.write("<!doctype html><html><head><meta charset='utf-8'>")
                     f.write(f"<title>{esc(APP_NAME)} Report</title>")
-                    f.write("""
+                    f.write(
+                        """
 <style>
 body{font-family:system-ui,Segoe UI,Arial,sans-serif;margin:20px;}
 h1{margin:0 0 8px 0;}
@@ -116,9 +133,12 @@ th{background:#f6f6f6;text-align:left;position:sticky;top:0;}
 code{background:#f2f2f2;padding:1px 4px;border-radius:4px;}
 </style>
 </head><body>
-""")
+"""
+                    )
                     f.write(f"<h1>{esc(APP_NAME)} Report</h1>")
-                    f.write(f"<div class='small'>Generated: {esc(datetime.now().isoformat(sep=' ', timespec='seconds'))}</div>")
+                    f.write(
+                        f"<div class='small'>Generated: {esc(datetime.now().isoformat(sep=' ', timespec='seconds'))}</div>"
+                    )
                     f.write("<h2>Summary</h2>")
                     f.write("<ul>")
                     f.write(f"<li>Total matched rows: <code>{n:,}</code></li>")
@@ -127,14 +147,18 @@ code{background:#f2f2f2;padding:1px 4px;border-radius:4px;}
                     f.write("</ul>")
 
                     f.write("<h2>Preview (first up to 5000 rows)</h2>")
-                    f.write("<table><thead><tr><th>#</th><th>Timestamp</th><th>Level</th><th>Message</th></tr></thead><tbody>")
+                    f.write(
+                        "<table><thead><tr><th>#</th><th>Timestamp</th><th>Level</th><th>Message</th></tr></thead><tbody>"
+                    )
                     for i, row in enumerate(rows[:max_preview]):
                         if self._cancel:
                             self.finished.emit("Export cancelled.")
                             return
                         ts, lvl, msg = self._line_fields(row)
                         f.write("<tr>")
-                        f.write(f"<td>{i+1}</td><td>{esc(ts)}</td><td>{esc(lvl)}</td><td>{esc(msg)}</td>")
+                        f.write(
+                            f"<td>{i+1}</td><td>{esc(ts)}</td><td>{esc(lvl)}</td><td>{esc(msg)}</td>"
+                        )
                         f.write("</tr>")
                         if i % 1000 == 0:
                             self.progress.emit(int((i / max(1, max_preview)) * 100))

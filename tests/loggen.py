@@ -30,6 +30,7 @@ ValueError: Invalid payload
 
 REPORT_EVERY_LINES = 100_000
 
+
 def random_message():
     msg = random.choice(MESSAGES)
     return msg.format(
@@ -40,6 +41,7 @@ def random_message():
         n=random.randint(1, 10),
         key=f"key_{random.randint(1, 100000)}",
     )
+
 
 def main():
     written = 0
@@ -73,6 +75,7 @@ def main():
                 print(f"[progress] {line_count:,} lines written (~{mb:.1f} MB)")
 
     print(f"Generated {OUTPUT_FILE} (~{written / 1024 / 1024:.1f} MB)")
+
 
 if __name__ == "__main__":
     main()

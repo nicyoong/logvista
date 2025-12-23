@@ -5,11 +5,27 @@ import time
 import traceback
 
 from PySide6.QtCore import (
-    Qt, QAbstractTableModel, QModelIndex, QObject, QThread, Signal, Slot, QSize,
-    QTimer
+    Qt,
+    QAbstractTableModel,
+    QModelIndex,
+    QObject,
+    QThread,
+    Signal,
+    Slot,
+    QSize,
+    QTimer,
 )
 
-LEVEL_WORDS = ("TRACE", "DEBUG", "INFO", "WARN", "WARNING", "ERROR", "FATAL", "CRITICAL")
+LEVEL_WORDS = (
+    "TRACE",
+    "DEBUG",
+    "INFO",
+    "WARN",
+    "WARNING",
+    "ERROR",
+    "FATAL",
+    "CRITICAL",
+)
 LEVEL_CANON = {
     "TRACE": "TRACE",
     "DEBUG": "DEBUG",
@@ -24,6 +40,7 @@ LEVEL_CANON = {
 LEVEL_ORDER = ["TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL", "CRITICAL"]
 LEVEL_TO_INT = {lvl: i for i, lvl in enumerate(LEVEL_ORDER)}
 INT_TO_LEVEL = {v: k for k, v in LEVEL_TO_INT.items()}
+
 
 # Detect a timestamp early in the line (common formats)
 # We'll parse a compact numeric key: YYYYMMDDHHMMSS (int) and a minute bucket: YYYYMMDDHHMM (int)
@@ -44,17 +61,28 @@ def parse_ts_compact(line: str):
         return None, None
     s = line[:19]
     # Accept space or 'T' between date/time
-    if not (s[4] == "-" and s[7] == "-" and (s[10] == " " or s[10] == "T") and s[13] == ":" and s[16] == ":"):
+    if not (
+        s[4] == "-"
+        and s[7] == "-"
+        and (s[10] == " " or s[10] == "T")
+        and s[13] == ":"
+        and s[16] == ":"
+    ):
         return None, None
 
     try:
-        y = int(s[0:4]); mo = int(s[5:7]); d = int(s[8:10])
-        hh = int(s[11:13]); mm = int(s[14:16]); ss = int(s[17:19])
-        sec_key = (((((y * 100 + mo) * 100 + d) * 100 + hh) * 100 + mm) * 100 + ss)
-        minute_key = ((((y * 100 + mo) * 100 + d) * 100 + hh) * 100 + mm)
+        y = int(s[0:4])
+        mo = int(s[5:7])
+        d = int(s[8:10])
+        hh = int(s[11:13])
+        mm = int(s[14:16])
+        ss = int(s[17:19])
+        sec_key = ((((y * 100 + mo) * 100 + d) * 100 + hh) * 100 + mm) * 100 + ss
+        minute_key = (((y * 100 + mo) * 100 + d) * 100 + hh) * 100 + mm
         return sec_key, minute_key
     except ValueError:
         return None, None
+
 
 def detect_level(line: str):
     """
@@ -63,7 +91,16 @@ def detect_level(line: str):
     """
     upper = line[:200].upper()
     # Fast path: look for " INFO " style
-    for w in (" TRACE ", " DEBUG ", " INFO ", " WARN ", " WARNING ", " ERROR ", " FATAL ", " CRITICAL "):
+    for w in (
+        " TRACE ",
+        " DEBUG ",
+        " INFO ",
+        " WARN ",
+        " WARNING ",
+        " ERROR ",
+        " FATAL ",
+        " CRITICAL ",
+    ):
         if w in upper:
             token = w.strip()
             return LEVEL_CANON.get(token, token)
@@ -74,6 +111,7 @@ def detect_level(line: str):
             return LEVEL_CANON.get(w, w)
 
     return ""
+
 
 @dataclass
 class LogIndex:
@@ -87,10 +125,11 @@ class LogIndex:
     def empty():
         return LogIndex(array("Q"), array("Q"), array("B"), 0, 0)
 
+
 class IndexWorker(QObject):
-    progress = Signal(int)            # 0..100
+    progress = Signal(int)  # 0..100
     status = Signal(str)
-    finished = Signal(object)         # LogIndex
+    finished = Signal(object)  # LogIndex
     failed = Signal(str)
 
     def __init__(self, path: str, chunk_size: int = 8 * 1024 * 1024):
@@ -138,7 +177,7 @@ class IndexWorker(QObject):
 
                         # Lightweight metadata extraction from this line (text decode limited)
                         # We decode a small prefix only, which is cheap.
-                        prefix_bytes = buf[start:min(start + 256, nl)]
+                        prefix_bytes = buf[start : min(start + 256, nl)]
                         line_prefix = prefix_bytes.decode("utf-8", errors="replace")
 
                         _, mk = parse_ts_compact(line_prefix)

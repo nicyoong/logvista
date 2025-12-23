@@ -3,6 +3,7 @@ import sys
 
 ALLOWED_EXTENSION = ".log"
 
+
 def is_safe_log_file(path: str) -> bool:
     """
     Strict validation:
@@ -46,9 +47,7 @@ def delete_permanently(path: str):
     print(f"File size  : {size_mb:.2f} MB")
     print("⚠️  This deletion is PERMANENT and bypasses the recycle bin.")
 
-    confirm = input(
-        "Type exactly DELETE_LOG to confirm: "
-    )
+    confirm = input("Type exactly DELETE_LOG to confirm: ")
 
     if confirm != "DELETE_LOG":
         print("❎ Cancelled.")
