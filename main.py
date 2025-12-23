@@ -67,3 +67,21 @@ class MainWindow(QMainWindow):
         self.path_label = QLabel("No file loaded")
         self.path_label.setTextInteractionFlags(Qt.TextSelectableByMouse)
         left_layout.addWidget(self.path_label)
+
+        # filter row
+        filter_box = QWidget()
+        fb = QVBoxLayout(filter_box)
+        fb.setContentsMargins(0, 0, 0, 0)
+        fb.setSpacing(6)
+
+        row1 = QHBoxLayout()
+        self.regex_input = QLineEdit()
+        self.regex_input.setPlaceholderText("Regex filter (Python re). Example: ERROR|Exception|timeout")
+        row1.addWidget(QLabel("Filter:"))
+        row1.addWidget(self.regex_input, 1)
+
+        self.use_regex_cb = QCheckBox("Use regex")
+        self.use_regex_cb.setChecked(True)
+        row1.addWidget(self.use_regex_cb)
+        fb.addLayout(row1)
+        
