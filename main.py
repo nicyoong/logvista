@@ -148,4 +148,17 @@ class MainWindow(QMainWindow):
         splitter.addWidget(right)
 
         splitter.setSizes([420, 880])
-        
+
+        # cluster dock
+        self.cluster_dock = QDockWidget("Error Clusters", self)
+        self.cluster_dock.setAllowedAreas(Qt.BottomDockWidgetArea | Qt.RightDockWidgetArea)
+        self.cluster_table = QTableWidget(0, 2)
+        self.cluster_table.setHorizontalHeaderLabels(["Count", "Cluster Key (normalized)"])
+        self.cluster_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeToContents)
+        self.cluster_table.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch)
+        self.cluster_table.verticalHeader().setVisible(False)
+        self.cluster_table.setSelectionBehavior(QTableWidget.SelectRows)
+        self.cluster_table.setSelectionMode(QTableWidget.SingleSelection)
+        self.cluster_table.cellDoubleClicked.connect(self.on_cluster_double_clicked)
+        self.cluster_dock.setWidget(self.cluster_table)
+        self.addDockWidget(Qt.BottomDockWidgetArea, self.cluster_dock)
