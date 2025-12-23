@@ -387,3 +387,9 @@ class MainWindow(QMainWindow):
         if self.active_time_bucket is not None:
             suffix = f" | time bucket {self.active_time_bucket}"
         self._set_status(f"Filtered: {len(rows):,} rows{suffix}", 100)
+
+    def clear_time_bucket(self):
+        if self.active_time_bucket is None:
+            return
+        self.active_time_bucket = None
+        self.apply_filter()
