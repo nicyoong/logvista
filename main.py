@@ -536,3 +536,31 @@ class MainWindow(QMainWindow):
         self.export_thread = (t, w)
         self._set_status("Exporting…", 0)
         t.start()
+
+    def _ask_export_cap(self):
+        dlg = QDialog(self)
+        dlg.setWindowTitle("Export options")
+        layout = QVBoxLayout(dlg)
+
+        form = QFormLayout()
+        spin = QSpinBox()
+        spin.setRange(1, 10_000_000)
+        spin.setValue(200_000)
+        form.addRow("Max rows (streamed). Use a big number or choose 'All'.", QLabel(""))
+        form.addRow("Max rows:", spin)
+        layout.addLayout(form)
+
+        all_cb = QCheckBox("Export ALL matched rows (can be very large)")
+        all_cb.setChecked(False)
+        layout.addWidget(all_cb)
+
+        btns = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        layout.addWidget(btns)
+        btns.accepted.connect(dlg.accept)
+        btns.rejected.connect(dlg.reject)
+
+        if dlg.exec() != QDialog.Accepted:
+            return 0
+        if all_cb.isChecked():
+            return -1
+        return int(spin.value())
