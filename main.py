@@ -96,4 +96,16 @@ class MainWindow(QMainWindow):
             lv_row.addWidget(cb)
         lv_row.addStretch(1)
         fb.addLayout(lv_row)
+
+        # buttons
+        row2 = QHBoxLayout()
+        self.apply_btn = QPushButton("Apply Filter")
+        self.apply_btn.clicked.connect(self.apply_filter)
+        self.clear_time_btn = QPushButton("Clear Time Bucket")
+        self.clear_time_btn.clicked.connect(self.clear_time_bucket)
+        row2.addWidget(self.apply_btn)
+        row2.addWidget(self.clear_time_btn)
+        fb.addLayout(row2)
+
+        left_layout.addWidget(filter_box)
         
