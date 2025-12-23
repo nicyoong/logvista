@@ -1,44 +1,11 @@
 import sys
 
-from PySide6.QtCore import (
-    Qt,
-    QAbstractTableModel,
-    QModelIndex,
-    QObject,
-    QThread,
-    Signal,
-    Slot,
-    QSize,
-    QTimer,
-)
-from PySide6.QtGui import QAction, QFont, QPainter, QColor, QPen
+from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
-    QApplication,
-    QMainWindow,
-    QWidget,
-    QFileDialog,
-    QHBoxLayout,
     QVBoxLayout,
-    QLineEdit,
-    QPushButton,
-    QLabel,
-    QCheckBox,
-    QSplitter,
-    QTableView,
-    QProgressBar,
-    QMessageBox,
-    QStatusBar,
-    QComboBox,
-    QDockWidget,
-    QTableWidget,
-    QTableWidgetItem,
-    QHeaderView,
     QTextEdit,
     QDialog,
     QDialogButtonBox,
-    QFormLayout,
-    QSpinBox,
-    QToolBar,
 )
 
 

@@ -5,15 +5,9 @@ import time
 import traceback
 
 from PySide6.QtCore import (
-    Qt,
-    QAbstractTableModel,
-    QModelIndex,
     QObject,
-    QThread,
     Signal,
     Slot,
-    QSize,
-    QTimer,
 )
 
 LEVEL_WORDS = (
