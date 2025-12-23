@@ -218,3 +218,14 @@ class MainWindow(QMainWindow):
         tb.addAction(self.act_export_csv)
         tb.addAction(self.act_export_jsonl)
         tb.addAction(self.act_export_html)
+
+    def _set_ui_enabled(self, enabled: bool):
+        self.apply_btn.setEnabled(enabled)
+        self.regex_input.setEnabled(enabled)
+        self.use_regex_cb.setEnabled(enabled)
+        for cb in self.level_cbs.values():
+            cb.setEnabled(enabled)
+        self.clear_time_btn.setEnabled(enabled)
+        self.act_export_csv.setEnabled(enabled)
+        self.act_export_jsonl.setEnabled(enabled)
+        self.act_export_html.setEnabled(enabled)
