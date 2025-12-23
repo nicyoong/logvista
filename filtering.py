@@ -7,6 +7,9 @@ from PySide6.QtCore import (
     QTimer
 )
 
+from indexing import detect_level, IndexWorker, LogIndex, parse_ts_compact
+from filelog import MappedLogFile, is_valid_log_file
+
 RE_GUID = re.compile(r"\b[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\b")
 RE_HEX = re.compile(r"\b0x[0-9a-fA-F]+\b")
 RE_NUM = re.compile(r"\b\d+\b")
@@ -111,6 +114,90 @@ class FilterWorker(QObject):
             self.progress.emit(100)
             self.status.emit(f"Filtering done: {len(out):,} matches")
             self.finished.emit(out)
+        except Exception:
+            self.failed.emit(traceback.format_exc())
+
+    def cancel(self):
+        self._cancel = True
+
+class ClusterWorker(QObject):
+    progress = Signal(int)
+    status = Signal(str)
+    finished = Signal(object)     # list[tuple[count, cluster_key, sample_line]]
+    failed = Signal(str)
+
+    def __init__(self, mapped_file: MappedLogFile, index: LogIndex, view_rows: list[int],
+                 only_errors: bool = True, max_clusters: int = 50):
+        super().__init__()
+        self.mf = mapped_file
+        self.idx = index
+        self.view_rows = view_rows
+        self.only_errors = only_errors
+        self.max_clusters = max_clusters
+        self._cancel = False
+
+    @Slot()
+    def run(self):
+        try:
+            self.status.emit("Clustering…")
+            counts = Counter()
+            sample = {}
+            n = len(self.view_rows)
+            last_report = time.time()
+
+            for j, row in enumerate(self.view_rows):
+                if self._cancel:
+                    self.status.emit("Clustering cancelled.")
+                    self.finished.emit([])
+                    return
+
+                lvl_int = int(self.idx.level_ints[row]) if row < len(self.idx.level_ints) else 255
+                lvl = INT_TO_LEVEL.get(lvl_int, "")
+                line = None
+
+                if self.only_errors:
+                    # Conservative error heuristic: level ERROR+ or contains exception keywords
+                    if lvl not in ("ERROR", "FATAL", "CRITICAL"):
+                        # peek a small prefix, cheap-ish
+                        offset = int(self.idx.offsets[row])
+                        prefix = self.mf.readline_at(offset, max_bytes=4096)
+                        up = prefix.upper()
+                        if "EXCEPTION" not in up and "TRACEBACK" not in up and "FAILED" not in up and "ERROR" not in up:
+                            continue
+                        line = prefix
+
+                if line is None:
+                    offset = int(self.idx.offsets[row])
+                    line = self.mf.readline_at(offset, max_bytes=64 * 1024)
+
+                # Remove timestamp/level prefix in a naive way
+                # Keep the "meat" for clustering
+                msg = line
+                if len(msg) > 32:
+                    # if timestamp detected, cut after it
+                    if parse_ts_compact(msg)[0] is not None:
+                        msg = msg[19:].lstrip(" -\t|")
+                # Normalize
+                key = normalize_message_for_cluster(msg)
+                if not key:
+                    continue
+
+                counts[key] += 1
+                if key not in sample:
+                    sample[key] = line[:5000]
+
+                now = time.time()
+                if now - last_report > 0.15:
+                    pct = int((j / max(1, n)) * 100)
+                    self.progress.emit(pct)
+                    self.status.emit(f"Clustering… {pct}% | unique {len(counts):,}")
+                    last_report = now
+
+            top = counts.most_common(self.max_clusters)
+            results = [(c, k, sample.get(k, "")) for (k, c) in top]
+            self.progress.emit(100)
+            self.status.emit(f"Clustering done: {len(results)} clusters")
+            self.finished.emit(results)
         except Exception:
             self.failed.emit(traceback.format_exc())
 
