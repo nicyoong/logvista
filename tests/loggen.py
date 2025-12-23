@@ -28,7 +28,7 @@ STACK_TRACE = """Traceback (most recent call last):
 ValueError: Invalid payload
 """
 
-REPORT_EVERY_LINES = 10_000_000
+REPORT_EVERY_LINES = 100_000
 
 def random_message():
     msg = random.choice(MESSAGES)
