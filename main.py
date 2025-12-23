@@ -588,3 +588,11 @@ class MainWindow(QMainWindow):
             "<li>Streaming exports</li>"
             "</ul>"
         )
+
+    def closeEvent(self, ev):
+        self.cancel_all_workers()
+        try:
+            self.mf.close()
+        except Exception:
+            pass
+        super().closeEvent(ev)
