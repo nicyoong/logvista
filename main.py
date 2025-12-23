@@ -301,3 +301,28 @@ class MainWindow(QMainWindow):
 
         self.index_thread = (t, w)
         t.start()
+
+    @Slot(int)
+    def on_progress(self, value: int):
+        self.prog.setValue(value)
+
+    @Slot(str)
+    def on_status(self, text: str):
+        self.status_text.setText(text)
+
+    @Slot(object)
+    def on_index_finished(self, idx: LogIndex):
+        self.idx = idx
+        self.model.log_index = idx
+        self._set_ui_enabled(True)
+
+        # default view is all lines
+        all_rows = list(range(idx.total_lines))
+        self.model.set_view_rows(all_rows)
+
+        # compute timeline bins (fast: uses minute_keys already computed)
+        self.update_timeline_bins(all_rows)
+        # compute clusters
+        self.start_clustering()
+
+        self._set_status(f"Ready. Lines: {idx.total_lines:,}", 100)
