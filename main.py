@@ -393,3 +393,8 @@ class MainWindow(QMainWindow):
             return
         self.active_time_bucket = None
         self.apply_filter()
+
+    def on_timeline_bucket_clicked(self, minute_key: int):
+        # Click-to-filter to that minute
+        self.active_time_bucket = minute_key
+        self.apply_filter()
