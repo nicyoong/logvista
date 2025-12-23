@@ -489,3 +489,8 @@ class MainWindow(QMainWindow):
         self.regex_input.setText(pattern)
         self.use_regex_cb.setChecked(True)
         self.apply_filter()
+
+    def on_table_clicked(self, idx: QModelIndex):
+        row = idx.row()
+        txt = self.model.get_row_text(row)
+        self.details.setPlainText(txt)
