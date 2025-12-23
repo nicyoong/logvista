@@ -1,3 +1,6 @@
+from array import array
+from dataclasses import dataclass
+
 # Detect a timestamp early in the line (common formats)
 # We'll parse a compact numeric key: YYYYMMDDHHMMSS (int) and a minute bucket: YYYYMMDDHHMM (int)
 def parse_ts_compact(line: str):
