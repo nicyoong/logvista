@@ -564,3 +564,8 @@ class MainWindow(QMainWindow):
         if all_cb.isChecked():
             return -1
         return int(spin.value())
+    
+    @Slot(str)
+    def on_export_finished(self, msg: str):
+        self._set_status(msg, 100)
+        QMessageBox.information(self, "Export", msg)
