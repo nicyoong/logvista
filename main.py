@@ -50,4 +50,10 @@ class MainWindow(QMainWindow):
 
         self.active_time_bucket = None
 
-        
+        # central UI
+        central = QWidget()
+        self.setCentralWidget(central)
+        root = QHBoxLayout(central)
+
+        splitter = QSplitter(Qt.Horizontal)
+        root.addWidget(splitter)
