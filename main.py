@@ -33,3 +33,21 @@ from models import LogTableModel
 from previewdialog import TextPreviewDialog
 from settings import APP_NAME
 from timelinewidget import TimelineWidget
+
+class MainWindow(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle(APP_NAME)
+        self.resize(1300, 820)
+
+        self.mf = MappedLogFile()
+        self.idx = LogIndex.empty()
+
+        self.index_thread = None
+        self.filter_thread = None
+        self.cluster_thread = None
+        self.export_thread = None
+
+        self.active_time_bucket = None
+
+        
