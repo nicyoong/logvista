@@ -469,3 +469,23 @@ class MainWindow(QMainWindow):
             it1 = QTableWidgetItem(key)
             self.cluster_table.setItem(row, 0, it0)
             self.cluster_table.setItem(row, 1, it1)
+
+    def on_cluster_double_clicked(self, row: int, col: int):
+        it = self.cluster_table.item(row, 0)
+        if not it:
+            return
+        key, sample = it.data(Qt.UserRole)
+
+        # show sample + optionally apply a regex-ish filter that searches for key tokens
+        dlg = TextPreviewDialog(f"Cluster Sample (count={it.text()})", sample, self)
+        dlg.exec()
+
+        # Apply token filter: build a fuzzy contains regex from cluster key
+        # This makes drill-down feel “magical” but still explainable.
+        tokens = [t for t in re.split(r"\W+", key) if t and t not in ("<num>", "<guid>", "<hex>", "<path>", "<str>", "<ip>", "<email>")]
+        if not tokens:
+            return
+        pattern = ".*".join(map(re.escape, tokens[:8]))
+        self.regex_input.setText(pattern)
+        self.use_regex_cb.setChecked(True)
+        self.apply_filter()
