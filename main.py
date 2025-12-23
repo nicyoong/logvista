@@ -114,3 +114,13 @@ class MainWindow(QMainWindow):
         self.timeline = TimelineWidget()
         self.timeline.bucketClicked.connect(self.on_timeline_bucket_clicked)
         left_layout.addWidget(self.timeline)
+
+        # details pane
+        left_layout.addWidget(QLabel("Selected line:"))
+        self.details = QTextEdit()
+        self.details.setReadOnly(True)
+        self.details.setFont(QFont("Consolas" if sys.platform.startswith("win") else "Monospace", 10))
+        left_layout.addWidget(self.details, 1)
+
+        splitter.addWidget(left)
+        
