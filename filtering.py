@@ -1,13 +1,14 @@
 import re
 import time
 import traceback
+from collections import Counter
 
 from PySide6.QtCore import (
     Qt, QAbstractTableModel, QModelIndex, QObject, QThread, Signal, Slot, QSize,
     QTimer
 )
 
-from indexing import detect_level, IndexWorker, LogIndex, parse_ts_compact
+from indexing import detect_level, IndexWorker, LogIndex, parse_ts_compact, INT_TO_LEVEL
 from filelog import MappedLogFile, is_valid_log_file
 
 RE_GUID = re.compile(r"\b[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\b")
