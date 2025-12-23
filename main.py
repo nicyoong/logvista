@@ -398,3 +398,36 @@ class MainWindow(QMainWindow):
         # Click-to-filter to that minute
         self.active_time_bucket = minute_key
         self.apply_filter()
+    
+    def update_timeline_bins(self, view_rows: list[int], max_bins: int = 240):
+        """
+        Uses minute_keys. If there are too many distinct minutes, it compresses into larger bins.
+        """
+        mk = self.idx.minute_keys
+        counts = Counter()
+        unknown = 0
+        for r in view_rows:
+            v = int(mk[r]) if r < len(mk) else 0
+            if v == 0:
+                unknown += 1
+            else:
+                counts[v] += 1
+
+        if not counts:
+            self.timeline.set_bins([])
+            return
+
+        minutes_sorted = sorted(counts.items())  # (minute_key, count)
+
+        # compress if too many bins: group into blocks
+        if len(minutes_sorted) > max_bins:
+            block = math.ceil(len(minutes_sorted) / max_bins)
+            compressed = []
+            for i in range(0, len(minutes_sorted), block):
+                chunk = minutes_sorted[i:i+block]
+                mk0 = chunk[0][0]
+                csum = sum(c for _, c in chunk)
+                compressed.append((mk0, csum))
+            minutes_sorted = compressed
+
+        self.timeline.set_bins(minutes_sorted)
