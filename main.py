@@ -326,3 +326,12 @@ class MainWindow(QMainWindow):
         self.start_clustering()
 
         self._set_status(f"Ready. Lines: {idx.total_lines:,}", 100)
+
+    def cancel_all_workers(self):
+        for obj in (self.index_thread, self.filter_thread, self.cluster_thread, self.export_thread):
+            if obj:
+                t, w = obj
+                try:
+                    w.cancel()
+                except Exception:
+                    pass
