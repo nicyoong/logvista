@@ -256,3 +256,48 @@ class MainWindow(QMainWindow):
             return
 
         self.load_path(path)
+
+    def load_path(self, path: str):
+        if not is_valid_log_file(path):
+            QMessageBox.critical(
+                self,
+                "Invalid file",
+                "Refusing to load non-log file."
+            )
+            return
+        # cancel running jobs
+        self.cancel_all_workers()
+
+        try:
+            self.mf.open(path)
+        except Exception as e:
+            QMessageBox.critical(self, "Open failed", str(e))
+            return
+
+        self.path_label.setText(path)
+        self._set_status("Opened file. Starting index…", 0)
+        self._set_ui_enabled(False)
+        self.details.clear()
+        self.cluster_table.setRowCount(0)
+        self.timeline.set_bins([])
+        self.active_time_bucket = None
+
+        # start index worker
+        w = IndexWorker(path)
+        t = QThread(self)
+        w.moveToThread(t)
+        w.progress.connect(self.on_progress)
+        w.status.connect(self.on_status)
+        w.finished.connect(self.on_index_finished)
+        w.failed.connect(self.on_worker_failed)
+
+        t.started.connect(w.run)
+        # cleanups
+        w.finished.connect(t.quit)
+        w.finished.connect(w.deleteLater)
+        t.finished.connect(t.deleteLater)
+        w.failed.connect(t.quit)
+        w.failed.connect(w.deleteLater)
+
+        self.index_thread = (t, w)
+        t.start()
