@@ -123,4 +123,29 @@ class MainWindow(QMainWindow):
         left_layout.addWidget(self.details, 1)
 
         splitter.addWidget(left)
+
+        # right panel: table
+        right = QWidget()
+        right_layout = QVBoxLayout(right)
+        right_layout.setContentsMargins(8, 8, 8, 8)
+        right_layout.setSpacing(8)
+
+        self.table = QTableView()
+        self.table.setSortingEnabled(False)
+        self.table.setSelectionBehavior(QTableView.SelectRows)
+        self.table.setSelectionMode(QTableView.SingleSelection)
+        self.table.verticalHeader().setVisible(False)
+        self.table.horizontalHeader().setStretchLastSection(True)
+        self.table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeToContents)
+        self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeToContents)
+        self.table.horizontalHeader().setSectionResizeMode(2, QHeaderView.Stretch)
+        self.table.clicked.connect(self.on_table_clicked)
+
+        self.model = LogTableModel(self.mf, self.idx)
+        self.table.setModel(self.model)
+
+        right_layout.addWidget(self.table, 1)
+        splitter.addWidget(right)
+
+        splitter.setSizes([420, 880])
         
