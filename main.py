@@ -162,3 +162,14 @@ class MainWindow(QMainWindow):
         self.cluster_table.cellDoubleClicked.connect(self.on_cluster_double_clicked)
         self.cluster_dock.setWidget(self.cluster_table)
         self.addDockWidget(Qt.BottomDockWidgetArea, self.cluster_dock)
+
+        # status bar with progress
+        sb = QStatusBar()
+        self.setStatusBar(sb)
+        self.prog = QProgressBar()
+        self.prog.setRange(0, 100)
+        self.prog.setValue(0)
+        self.prog.setFixedWidth(220)
+        sb.addPermanentWidget(self.prog)
+        self.status_text = QLabel("")
+        sb.addWidget(self.status_text, 1)
