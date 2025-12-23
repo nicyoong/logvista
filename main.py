@@ -335,3 +335,36 @@ class MainWindow(QMainWindow):
                     w.cancel()
                 except Exception:
                     pass
+
+    def selected_levels(self) -> set:
+        return {lvl for lvl, cb in self.level_cbs.items() if cb.isChecked()}
+
+    def apply_filter(self):
+        if self.idx.total_lines <= 0:
+            return
+        self.cancel_filter_cluster_export()
+
+        regex_text = self.regex_input.text()
+        use_regex = self.use_regex_cb.isChecked()
+        level_mask = self.selected_levels()
+        bucket = self.active_time_bucket
+
+        w = FilterWorker(self.mf, self.idx, regex_text, use_regex, level_mask, bucket)
+        t = QThread(self)
+        w.moveToThread(t)
+        w.progress.connect(self.on_progress)
+        w.status.connect(self.on_status)
+        w.finished.connect(self.on_filter_finished)
+        w.failed.connect(self.on_worker_failed)
+
+        t.started.connect(w.run)
+        w.finished.connect(t.quit)
+        w.finished.connect(w.deleteLater)
+        t.finished.connect(t.deleteLater)
+        w.failed.connect(t.quit)
+        w.failed.connect(w.deleteLater)
+
+        self.filter_thread = (t, w)
+        self._set_status("Filtering…", 0)
+        t.start()
+    
