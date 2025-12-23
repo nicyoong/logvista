@@ -43,6 +43,7 @@ def random_message():
 
 def main():
     written = 0
+    line_count = 0
     now = datetime.now() - timedelta(days=1)
 
     with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
