@@ -596,3 +596,13 @@ class MainWindow(QMainWindow):
         except Exception:
             pass
         super().closeEvent(ev)
+
+def main():
+    app = QApplication(sys.argv)
+    w = MainWindow()
+    w.show()
+    sys.exit(app.exec())
+
+
+if __name__ == "__main__":
+    main()
