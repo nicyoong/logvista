@@ -108,4 +108,9 @@ class MainWindow(QMainWindow):
         fb.addLayout(row2)
 
         left_layout.addWidget(filter_box)
-        
+
+        # timeline
+        left_layout.addWidget(QLabel("Timeline (click a bar to filter to that minute):"))
+        self.timeline = TimelineWidget()
+        self.timeline.bucketClicked.connect(self.on_timeline_bucket_clicked)
+        left_layout.addWidget(self.timeline)
