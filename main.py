@@ -377,3 +377,13 @@ class MainWindow(QMainWindow):
                     w.cancel()
                 except Exception:
                     pass
+    
+    @Slot(object)
+    def on_filter_finished(self, rows: list[int]):
+        self.model.set_view_rows(rows)
+        self.update_timeline_bins(rows)
+        self.start_clustering()
+        suffix = ""
+        if self.active_time_bucket is not None:
+            suffix = f" | time bucket {self.active_time_bucket}"
+        self._set_status(f"Filtered: {len(rows):,} rows{suffix}", 100)
